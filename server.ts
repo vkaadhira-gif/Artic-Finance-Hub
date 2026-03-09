@@ -97,6 +97,7 @@ function buildFinancialSnapshot(profile: any = {}) {
     runway: Number(runway.toFixed(1)),
     monthlyBalance: Number(monthlyBalance.toFixed(2)),
     savingsRate: Number(savingsRate.toFixed(0)),
+    debtRatio: totalAssets > 0 ? Number(((debt / totalAssets) * 100).toFixed(1)) : 0,
     reminders: Array.isArray(profile.reminders) ? profile.reminders : [],
     goals: Array.isArray(profile.goals) ? profile.goals : []
   };
@@ -319,12 +320,16 @@ app.post("/api/score", (req, res) => {
 
   healthScore = clamp(Math.round(healthScore), 0, 100);
 
+  const totalDebt = Number(debt.toFixed(2));
+  const debtRatio = totalAssets > 0 ? (totalDebt / totalAssets) * 100 : 0;
+
   res.json({
     totalAssets: Number(totalAssets.toFixed(2)),
-    totalDebt: Number(debt.toFixed(2)),
+    totalDebt,
     netWorth: Number(netWorth.toFixed(2)),
     runway: Number(runway.toFixed(1)),
     savingsRate: Number(savingsRate.toFixed(0)),
+    debtRatio: Number(debtRatio.toFixed(1)),
     diversificationCount,
     healthScore,
     insights

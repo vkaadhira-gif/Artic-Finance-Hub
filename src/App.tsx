@@ -61,7 +61,7 @@ const TABS = [
 ];
 
 const DEFAULT_PROFILE = {
-  assets: { savings: 18000, investments: 24000, cpf: 12000, insuranceValue: 4000 },
+  assets: { savings: 15300, investments: 24000, cpf: 12000, insuranceValue: 4000 },
   liabilities: { debt: 6500 },
   monthly: { income: 4200, expenses: 2550, subscriptions: 4 },
   goals: [
@@ -724,6 +724,44 @@ export default function App() {
                 </div>
               </Card>
 
+              {/* Financial Goals Section */}
+              <div className="col-span-12">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-bold text-arctic-900 flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-arctic-500" />
+                    Financial Goals
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {profile.goals.map((goal, i) => {
+                    const progress = Math.min(100, (goal.current / goal.target) * 100);
+                    const isReached = progress >= 100;
+                    return (
+                      <Card key={i} title={goal.name} icon={Shield}>
+                        <div className="flex items-end justify-between mb-2">
+                          <span className="text-xl font-bold text-arctic-900 font-mono">${goal.current.toLocaleString()}</span>
+                          <span className="text-[10px] text-arctic-400 font-bold uppercase">Target: ${goal.target.toLocaleString()}</span>
+                        </div>
+                        <div className="h-2 bg-arctic-50 rounded-full overflow-hidden mb-2">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${progress}%` }}
+                            className={cn(
+                              "h-full transition-colors duration-500",
+                              isReached ? "bg-emerald-500" : "bg-arctic-500"
+                            )}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-arctic-400 uppercase tracking-widest">{progress.toFixed(0)}% Complete</span>
+                          <span className="text-[10px] font-bold text-arctic-400 uppercase tracking-widest">Due {goal.deadline}</span>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Reminders Section */}
               <div className="col-span-12">
                 <div className="flex items-center justify-between mb-6">
@@ -830,23 +868,44 @@ export default function App() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {[
                   { label: "Savings Rate", val: `${scoreData?.savingsRate}%`, target: "20%", icon: TrendingUp, color: "text-arctic-500" },
-                  { label: "Emergency Runway", val: `${scoreData?.runway} Mo`, target: "6 Mo", icon: Shield, color: "text-emerald-500" },
+                  { label: "Emergency Runway", val: `${scoreData?.runway} Months`, target: "6 Months", icon: Shield, color: "text-emerald-500" },
                   { label: "Debt Ratio", val: `${scoreData?.debtRatio}%`, target: "<30%", icon: AlertTriangle, color: "text-rose-500" },
-                ].map((stat, i) => (
-                  <Card key={i} title={stat.label} icon={stat.icon}>
-                    <div className="flex items-end justify-between mb-4">
-                      <span className={cn("text-3xl font-bold font-mono", stat.color)}>{stat.val}</span>
-                      <span className="text-[10px] text-arctic-400 font-bold uppercase">Target: {stat.target}</span>
-                    </div>
-                    <div className="h-2 bg-arctic-50 rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: stat.label === "Debt Ratio" ? `${Math.max(0, 100 - Number(stat.val.replace('%', '')))}%` : `${Math.min(100, (Number(stat.val.split(' ')[0]) / Number(stat.target.split(' ')[0])) * 100)}%` }}
-                        className={cn("h-full", stat.color.replace('text', 'bg'))}
-                      />
-                    </div>
-                  </Card>
-                ))}
+                ].map((stat, i) => {
+                  let progress = 0;
+                  if (stat.label === "Debt Ratio") {
+                    const val = Number(stat.val.replace('%', ''));
+                    progress = Math.max(0, 100 - val);
+                  } else if (stat.label === "Savings Rate") {
+                    const val = Number(stat.val.replace('%', ''));
+                    const target = Number(stat.target.replace('%', ''));
+                    progress = Math.min(100, (val / target) * 100);
+                  } else if (stat.label === "Emergency Runway") {
+                    const val = Number(stat.val.split(' ')[0]);
+                    const target = Number(stat.target.split(' ')[0]);
+                    progress = Math.min(100, (val / target) * 100);
+                  }
+                  
+                  const isReached = progress >= 100;
+
+                  return (
+                    <Card key={i} title={stat.label} icon={stat.icon}>
+                      <div className="flex items-end justify-between mb-4">
+                        <span className={cn("text-2xl font-bold font-mono", stat.color)}>{stat.val}</span>
+                        <span className="text-[10px] text-arctic-400 font-bold uppercase">Target: {stat.target}</span>
+                      </div>
+                      <div className="h-2 bg-arctic-50 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progress}%` }}
+                          className={cn(
+                            "h-full transition-colors duration-500",
+                            isReached ? "bg-emerald-500" : stat.color.replace('text', 'bg')
+                          )}
+                        />
+                      </div>
+                    </Card>
+                  );
+                })}
               </div>
 
               <Card title="Finley's Detailed Analysis" icon={Info}>
@@ -969,7 +1028,7 @@ export default function App() {
                       </div>
                       <div>
                         <p className="text-[10px] text-arctic-400 font-bold uppercase tracking-widest mb-1">Emergency Runway</p>
-                        <span className="text-2xl font-bold font-mono">{shockResult.emergencyRunway} Mo</span>
+                        <span className="text-2xl font-bold font-mono">{shockResult.emergencyRunway} Months</span>
                       </div>
                     </div>
                   </Card>
